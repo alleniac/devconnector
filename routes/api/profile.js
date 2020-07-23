@@ -70,7 +70,6 @@ router.post(
 
     const fields = req.body;
     Object.keys(fields).map((field) => {
-      console.log('field: ', field);
       if (allFields.includes(field)) {
         switch (field) {
           case 'skills':
@@ -115,5 +114,39 @@ router.post(
     }
   },
 );
+
+// @route  GET api/profile
+// @desc   Get all profiles
+// @access Public
+router.get('/', async (req, res) => {
+  try {
+    const profiles = await Profile.find().populate('user', ['name', 'avatar']);
+    res.json(profiles);
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).send('Server internal error');
+  }
+});
+
+// @route  GET api/profile/user/:userId
+// @desc   Get profile by user ID
+// @access Public
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const profile = await Profile.findOne({
+      user: req.params.userId,
+    }).populate('user', ['name', 'avatar']);
+
+    if (!profile) return res.status(400).json({ msg: 'Profile not found' });
+
+    return res.json(profile);
+  } catch (error) {
+    console.error(error.message);
+    if (error.kind === 'ObjectId') {
+      return res.status(400).json({ msg: 'Profile not found' });
+    }
+    return res.status(500).send('Server internal error');
+  }
+});
 
 module.exports = router;
